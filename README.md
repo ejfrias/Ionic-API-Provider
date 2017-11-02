@@ -35,15 +35,15 @@ import { API } from '../../providers/api'; //dont forget to import the provider 
 export class Page {
 	constructor (public api: API) {
 		let page = 'add-shirt';
-    let params = {
-      color: 'red',
-      size: 'small',
-      gender: 'female'
-    };
-    
-    this.api.ajaxRequest(page, params).then(response => {
-      console.log(response); //response data should be in json format
-    });
-  }
+		let params = {
+			color: 'red',
+			size: 'small',
+			gender: 'female'
+		};
+
+		this.api.ajaxRequest(page, params).then(response => {
+			console.log(response); //response data should be in json format
+		});
+	}
 }
 ```
