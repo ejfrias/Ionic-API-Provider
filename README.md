@@ -4,6 +4,7 @@ Custom provider to help Ionic communicate with your server via HTTP requests
 
 ## How to use
 Move the api.ts file on your-app-path/src/providers/
+
 Then add this custom provider to your /src/app/app.modules.ts
 ```javascript
 ...
