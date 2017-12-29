@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { Http, Headers, RequestOptions, RequestMethod } from '@angular/http';
-import 'rxjs/add/operator/map';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import 'rxjs/add/operator/retry';
 
 
 @Injectable()
@@ -8,9 +8,9 @@ export class API {
 
 	public apiPath: string = 'https://www.your-server.com/api.php?q=';
 	public ajaxType: string = 'Post'; //use post request in production
-	public appVersion: string = '1.0.1';
-	public app: number = 0;
-	public params: Object = {};
+	public appVersion: string = '1.0.1'; //app version, to cross check the user's app version to prompt them to update when they have outdated version
+	public app: number = 0; //if the user is using a native = 1 or browser = 0
+	public params: Object = {}; //parameters to be sent
 
 	constructor( public http: Http ){
 		//see whether the app runs on native or just on a browser
@@ -42,36 +42,38 @@ export class API {
 	ajaxRequest( page: string, data: any = '' ){
 		let params = this.params; //set parameters
 		let requestUrl = this.apiPath + page; //set URL to send request
+		let requestParams = new HttpParams;
 
 		//merge the parameters and the provided data
 		if( data != '' ){
 			params = Object.assign({}, data, params);
 		}
+		
+		//set parameters
+		Object.keys(params).forEach(key => {
+			requestParams.set(key, params[key]);
+		});
 
 		//convert parameters into a string
 		params = Object.keys(params).map(function(key) {
 			return key + '=' + encodeURIComponent(params[key]);
 		}).join('&');
-
-		//set necessary HTTP options
-		let requestOptions: RequestOptions = new RequestOptions({
-			withCredentials: true,
-			method: RequestMethod[this.ajaxType],
-			headers: new Headers({'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}),
-			body: params
-		});
-
+		
 		//attach parameters to the url if we are on localhost
 		if( this.ajaxType == 'Get' ){
-			requestUrl = this.apiPath + page + '&' + params;
+			requestUrl += '&' + params;
 		}
+
+		//set necessary HTTP options
+		let requestOptions: {
+			headers: new HttpHeaders({'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}),
+			withCredentials: true,
+			params: requestParams,
+			body: params
+		};
 		
-		//send request
-		return new Promise(resolve => {
-			this.http.request(requestUrl, requestOptions).map(response => response.json()).subscribe(data => {
-				resolve(data);
-			});
-		});
+		//send request, on failure retry up to three times
+		return this.http.request(this.ajaxType, requestUrl, requestOptions).retry(3);
 	}
 
 	/**
@@ -85,24 +87,23 @@ export class API {
 		let requestUrl = this.apiPath + page; //set URL to send request
 
 		//merge the parameters and the provided data using the FormData.set function
-		if( data != '' ){
-			for( let key in this.params ){
-				data.set(key, params[key]);
-			}
-			params = data;
+		if( data == '' ){
+			data = new FormData();
 		}
+		
+		Object.keys(this.params).forEach(key => {
+			data.set(key, this.params[key]);
+		});
+		
+		params = data;
 
-		let requestOptions: RequestOptions = new RequestOptions({
+		let requestOptions: Object = {
+			headers: new HttpHeaders({ 'Accept': 'application/json' }),
 			withCredentials: true,
-			headers: new Headers({ 'Accept': 'application/json' }),
 			body: params
-		});
+		};
 
-		//send request using post
-		return new Promise(resolve => {
-			this.http.post(requestUrl, params, requestOptions).map(response => response.json()).subscribe(data => {
-				resolve(data);
-			});
-		});
+		//send request using post, on failure retry up to three times
+		return this.http.post(requestUrl, params, requestOptions).retry(3);
 	}
 }
