@@ -5,9 +5,10 @@ Custom provider to help Ionic communicate with your server via HTTP requests
 ## How to use
 Move the api.ts file on your-app-path/src/providers/
 
-Then add this custom provider to your /src/app/app.modules.ts
+Then import this API provider and the HttpClientModule to /src/app/app.modules.ts
 ```javascript
 ...
+import { HttpClientModule } from '@angular/common/http';
 import { API } from '../providers/api';
 
 @NgModule({
@@ -15,7 +16,8 @@ import { API } from '../providers/api';
 		...
 	],
 	imports: [
-		...
+		...,
+		HttpClientModule
 	],
 	bootstrap: [IonicApp],
 	entryComponents: [CCF],
@@ -42,7 +44,7 @@ export class Page {
 			gender: 'female'
 		};
 
-		this.api.ajaxRequest(page, params).then(response => {
+		this.api.ajaxRequest(page, params).subscribe(response => {
 			console.log(response); //response data should be in json format
 		});
 	}
