@@ -20,7 +20,7 @@ import { API } from '../providers/api';
 		HttpClientModule
 	],
 	bootstrap: [IonicApp],
-	entryComponents: [CCF],
+	entryComponents: [MyApp],
 	providers: [
 		API,
 		...
@@ -44,7 +44,7 @@ export class Page {
 			gender: 'female'
 		};
 
-		this.api.ajaxRequest(page, params).subscribe(response => {
+		this.api.ajaxRequest(ENDPOINT + page, params).subscribe(response => {
 			console.log(response); //response data should be in json format
 		});
 	}
